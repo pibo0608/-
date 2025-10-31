@@ -1,0 +1,460 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title>我的网站</title>
+<script type="text/javascript">
+// 在head中先定义基本函数，避免页面加载错误
+function showPage(pageId) {
+    // 隐藏所有div
+    var divs = ['home', 'gallery', 'message', 'updates', 'visitors', 'blog'];
+    for (var i = 0; i < divs.length; i++) {
+        var div = document.getElementById(divs[i]);
+        if (div) div.style.display = 'none';
+    }
+    
+    // 显示选中的div
+    var targetDiv = document.getElementById(pageId);
+    if (targetDiv) targetDiv.style.display = 'block';
+    
+    // 如果是访客记录页面，加载记录
+    if (pageId == 'visitors') {
+        setTimeout(loadVisitorRecords, 100);
+    }
+    // 如果是博客页面，加载博客文章
+    if (pageId == 'blog') {
+        setTimeout(loadBlogPosts, 100);
+    }
+}
+
+// 访客计数器
+var visitorCount = 0;
+
+function incrementVisitor() {
+    visitorCount = visitorCount + 1;
+    var formattedCount = "00000" + visitorCount;
+    formattedCount = formattedCount.substr(formattedCount.length - 5);
+    document.getElementById('visitor-count').innerHTML = formattedCount;
+    alert('谢谢您的访问！您是第' + formattedCount + '位访客。');
+}
+
+// 留言板功能
+function submitMessage() {
+    var author = document.forms['messageForm'].author.value;
+    var content = document.forms['messageForm'].content.value;
+    
+    // 简单的去空格
+    while(content.charAt(0) == ' ') content = content.substring(1, content.length);
+    while(content.charAt(content.length-1) == ' ') content = content.substring(0, content.length-1);
+    
+    if (content == '') {
+        alert('请输入留言内容！');
+        return;
+    }
+    
+    var now = new Date();
+    var dateString = now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日 " + 
+                     now.getHours() + ":" + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+    
+    var messagesContainer = document.getElementById('messages');
+    var newRow = document.createElement('tr');
+    var newCell = document.createElement('td');
+    newCell.innerHTML = '<b><font color="#336699">' + author + '</font></b> ' +
+                       '<font color="#666" size="2">- ' + dateString + '</font><br>' + content;
+    newCell.style.borderBottom = '1px dotted #CCC';
+    newCell.style.padding = '10px 0';
+    newRow.appendChild(newCell);
+    
+    var table = messagesContainer.getElementsByTagName('table')[0];
+    table.insertBefore(newRow, table.firstChild);
+    
+    document.forms['messageForm'].content.value = '';
+    alert('留言已提交！感谢您的反馈。');
+}
+
+// 博客功能
+var blogPosts = [];
+
+function submitBlogPost() {
+    var title = document.forms['blogForm'].title.value;
+    var content = document.forms['blogForm'].content.value;
+    
+    // 简单的去空格
+    while(title.charAt(0) == ' ') title = title.substring(1, title.length);
+    while(title.charAt(title.length-1) == ' ') title = title.substring(0, title.length-1);
+    while(content.charAt(0) == ' ') content = content.substring(1, content.length);
+    while(content.charAt(content.length-1) == ' ') content = content.substring(0, content.length-1);
+    
+    if (title == '' || content == '') {
+        alert('请输入标题和内容！');
+        return;
+    }
+    
+    var now = new Date();
+    var dateString = now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日 " + 
+                     now.getHours() + ":" + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+    
+    // 创建博客文章对象
+    var post = {
+        id: blogPosts.length + 1,
+        title: title,
+        content: content,
+        date: dateString,
+        author: '站长'
+    };
+    
+    blogPosts.unshift(post); // 添加到开头
+    
+    // 更新显示
+    loadBlogPosts();
+    
+    // 清空表单
+    document.forms['blogForm'].title.value = '';
+    document.forms['blogForm'].content.value = '';
+    
+    alert('博客文章发布成功！');
+}
+
+function loadBlogPosts() {
+    var blogContainer = document.getElementById('blog-posts');
+    
+    if (blogPosts.length == 0) {
+        blogContainer.innerHTML = '<table width="100%" border="0" cellpadding="5" cellspacing="0">' +
+                                 '<tr><td align="center" style="color:#666; font-style:italic; padding:20px;">暂无博客文章，点击"发布文章"添加第一篇博客</td></tr>' +
+                                 '</table>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < blogPosts.length; i++) {
+        var post = blogPosts[i];
+        html += '<table width="100%" border="0" cellpadding="15" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD; margin-bottom:15px;">';
+        html += '<tr><td>';
+        html += '<font size="4" color="#336699"><b>' + post.title + '</b></font><br>';
+        html += '<font color="#666" size="2"><i>发布时间：' + post.date + ' | 作者：' + post.author + '</i></font><br><br>';
+        html += post.content.replace(/\n/g, '<br>');
+        html += '</td></tr></table>';
+    }
+    
+    blogContainer.innerHTML = html;
+}
+
+function clearBlogPosts() {
+    if (confirm('确定要清空所有博客文章吗？此操作不可恢复！')) {
+        blogPosts = [];
+        loadBlogPosts();
+        alert('博客文章已清空！');
+    }
+}
+
+function addSampleBlogPosts() {
+    // 添加示例博客文章
+    var samplePosts = [
+        {
+            id: 1,
+            title: '欢迎来到我的博客！',
+            content: '这是我的第一篇博客文章。\n\n在这里我会分享我的想法、经验和生活点滴。\n\n感谢大家的关注和支持！',
+            date: '2023年10月1日 09:00',
+            author: '站长'
+        },
+        {
+            id: 2,
+            title: '网站开发心得',
+            content: '今天完成了这个网站的开发，使用纯HTML和JavaScript，完全兼容FrontPage。\n\n虽然功能简单，但能满足基本需求。\n\n后续还会继续改进！',
+            date: '2023年10月2日 14:30',
+            author: '站长'
+        }
+    ];
+    
+    blogPosts = samplePosts;
+    loadBlogPosts();
+    alert('已添加示例博客文章！');
+}
+
+// 访客记录功能
+function loadVisitorRecords() {
+    document.getElementById('total-visitors').innerHTML = visitorCount;
+    document.getElementById('record-count').innerHTML = '3';
+    
+    var visitorList = document.getElementById('visitor-list');
+    visitorList.innerHTML = '<table width="100%" border="0" cellpadding="5" cellspacing="0">' +
+                           '<tr><td><b><font color="#336699">#00001</font></b> 2023年10月1日 10:30:25 首页</td></tr>' +
+                           '<tr><td><b><font color="#336699">#00002</font></b> 2023年10月1日 14:15:42 图片展示</td></tr>' +
+                           '<tr><td><b><font color="#336699">#00003</font></b> 2023年10月2日 09:05:18 留言板</td></tr>' +
+                           '</table>';
+}
+
+function clearVisitorRecords() {
+    if (confirm('确定要清空所有访客记录吗？')) {
+        var visitorList = document.getElementById('visitor-list');
+        visitorList.innerHTML = '<table width="100%" border="0" cellpadding="5" cellspacing="0">' +
+                               '<tr><td align="center" style="color:#666; font-style:italic; padding:20px;">暂无访客记录</td></tr>' +
+                               '</table>';
+        document.getElementById('total-visitors').innerHTML = '0';
+        document.getElementById('record-count').innerHTML = '0';
+        alert('访客记录已清空！');
+    }
+}
+
+function addSampleRecords() {
+    loadVisitorRecords();
+    alert('已添加示例记录！');
+}
+</script>
+</head>
+<body onload="showPage('home')">
+
+<!-- 简单的表格布局，完全兼容FrontPage -->
+<table width="800" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="border:1px solid #336699;">
+  <tr>
+    <td bgcolor="#336699" height="80" align="center">
+      <font color="#FFFFFF" size="6"><b>欢迎访问我的网站</b></font><br>
+      <font color="#FFFFFF">Microsoft FrontPage 完全兼容版</font>
+    </td>
+  </tr>
+  <tr>
+    <td bgcolor="#F0F0F0" height="30" align="center">
+      <a href="javascript:void(0)" onclick="showPage('home')"><font color="#336699"><b>首页</b></font></a> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="showPage('gallery')"><font color="#336699"><b>图片展示</b></font></a> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="showPage('message')"><font color="#336699"><b>留言板</b></font></a> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="showPage('blog')"><font color="#336699"><b>个人博客</b></font></a> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="showPage('updates')"><font color="#336699"><b>更新公告</b></font></a> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="showPage('visitors')"><font color="#336699"><b>访客记录</b></font></a>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:20px;">
+      
+      <!-- 首页 -->
+      <div id="home">
+        <table width="100%" border="0" cellpadding="10" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD;">
+          <tr>
+            <td>
+              <font size="5" color="#336699"><b>网站首页</b></font><br><br>
+              欢迎访问我的网站！这是一个完全兼容FrontPage的网站。<br><br>
+              <b>网站功能：</b>
+              <ul>
+                <li>首页 - 包含访客计数器</li>
+                <li>图片展示区 - 展示各种图片</li>
+                <li>留言板 - 访客可以留下信息</li>
+                <li>个人博客 - 站长发布文章和心得</li>
+                <li>更新公告栏 - 显示网站更新信息</li>
+                <li>访客记录 - 记录访客信息</li>
+              </ul>
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <table width="100%" border="0" cellpadding="20" cellspacing="0" bgcolor="#E6F2FF" style="border:2px dashed #336699;">
+          <tr>
+            <td align="center">
+              <font size="6">您是第 <span id="visitor-count">00000</span> 位访客</font><br>
+              <input type="button" value="点击增加访客数" onclick="incrementVisitor()" style="background-color:#336699; color:white; border:none; padding:10px 20px; margin-top:10px; cursor:pointer;">
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <table width="100%" border="0" cellpadding="10" cellspacing="0">
+          <tr>
+            <td align="center">
+              <b>最新动态</b><br>
+              ? 新增个人博客功能，站长可以发布文章<br>
+              ? 网站创建完成，所有功能整合在单个文件中<br>
+              ? 完全离线使用，无需网络连接<br>
+              ? 兼容Microsoft FrontPage编辑
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- 图片展示区 -->
+      <div id="gallery" style="display:none;">
+        <font size="5" color="#336699"><b>图片展示区</b></font><br><br>
+        这里展示了一些精选图片：<br><br>
+        
+        <table width="100%" border="0" cellpadding="15" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD;">
+          <tr>
+            <td>
+              <font color="#336699"><b>自然风光</b></font><br><br>
+              <img width='68px' height='90px' src='data:image/png;base64,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'>
+              <img src="" width="150" height="100" border="1" style="margin:5px;">
+              <img src="" width="150" height="100" border="1" style="margin:5px;">
+              <img src="" width="150" height="100" border="1" style="margin:5px;">
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <table width="100%" border="0" cellpadding="15" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD;">
+          <tr>
+            <td>
+              <font color="#336699"><b>城市建筑</b></font><br><br>
+              <img src="" width="150" height="100" border="1" style="margin:5px;">
+              <img src="" width="150" height="100" border="1" style="margin:5px;">
+              <img src="" width="150" height="100" border="1" style="margin:5px;">
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- 留言板 -->
+      <div id="message" style="display:none;">
+        <font size="5" color="#336699"><b>留言板</b></font><br><br>
+        欢迎留下您的意见、建议或任何想说的话！<br><br>
+        
+        <table width="100%" border="0" cellpadding="20" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD;">
+          <tr>
+            <td>
+              <b>发表留言</b><br><br>
+              <form name="messageForm">
+                您的姓名：<br>
+                <input type="text" name="author" value="访客" style="width:95%; padding:5px;"><br><br>
+                留言内容：<br>
+                <textarea name="content" rows="5" style="width:95%; padding:5px;">请输入您的留言...</textarea><br><br>
+                <center>
+                  <input type="button" value="提交留言" onclick="submitMessage()" style="background-color:#336699; color:white; border:none; padding:8px 20px; cursor:pointer; margin-right:30px;">
+                  <input type="reset" value="重新填写" style="background-color:#666; color:white; border:none; padding:8px 20px; cursor:pointer;">
+                </center>
+              </form>
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <div id="messages">
+          <table width="100%" border="0" cellpadding="5" cellspacing="0">
+            <tr>
+              <td style="border-bottom:1px dotted #CCC; padding:10px 0;">
+                <b><font color="#336699">张三</font></b> 
+                <font color="#666" size="2">- 2023年10月1日 10:30</font><br>
+                这个留言板很好用！界面简洁，功能实用。
+              </td>
+            </tr>
+            <tr>
+              <td style="border-bottom:1px dotted #CCC; padding:10px 0;">
+                <b><font color="#336699">李四</font></b> 
+                <font color="#666" size="2">- 2023年10月2日 14:20</font><br>
+                期待更多内容和功能更新！
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      
+      <!-- 个人博客 -->
+      <div id="blog" style="display:none;">
+        <font size="5" color="#336699"><b>个人博客</b></font><br><br>
+        在这里分享我的想法、经验和生活点滴<br><br>
+        
+        <table width="100%" border="0" cellpadding="20" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD;">
+          <tr>
+            <td>
+              <b>发布新文章</b><br><br>
+              <form name="blogForm">
+                文章标题：<br>
+                <input type="text" name="title" style="width:95%; padding:5px;" placeholder="请输入文章标题"><br><br>
+                文章内容：<br>
+                <textarea name="content" rows="8" style="width:95%; padding:5px;" placeholder="请输入文章内容（支持换行）"></textarea><br><br>
+                <center>
+                  <input type="button" value="发布文章" onclick="submitBlogPost()" style="background-color:#336699; color:white; border:none; padding:8px 20px; cursor:pointer; margin-right:15px;">
+                  <input type="button" value="添加示例" onclick="addSampleBlogPosts()" style="background-color:#669933; color:white; border:none; padding:8px 20px; cursor:pointer; margin-right:15px;">
+                  <input type="button" value="清空博客" onclick="clearBlogPosts()" style="background-color:#993366; color:white; border:none; padding:8px 20px; cursor:pointer;">
+                </center>
+              </form>
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <div id="blog-posts">
+          <table width="100%" border="0" cellpadding="5" cellspacing="0">
+            <tr>
+              <td align="center" style="color:#666; font-style:italic; padding:20px;">
+                暂无博客文章，点击"发布文章"添加第一篇博客
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      
+      <!-- 更新公告 -->
+      <div id="updates" style="display:none;">
+        <font size="5" color="#336699"><b>更新公告栏</b></font><br><br>
+        这里记录了网站的所有重要更新和变更。<br><br>
+        
+        <table width="100%" border="0" cellpadding="15" cellspacing="0" bgcolor="#F9F9F9" style="border-left:4px solid #336699;">
+          <tr>
+            <td>
+              <font color="#336699"><b>新增个人博客功能</b></font><br>
+              <font color="#666" size="2"><i>2023年10月3日</i></font><br>
+              新增独立的个人博客功能，站长可以发布文章和心得，支持多篇文章管理。
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <table width="100%" border="0" cellpadding="15" cellspacing="0" bgcolor="#FFFACD" style="border-left:4px solid #FFD700;">
+          <tr>
+            <td>
+              <font color="#336699"><b>网站创建完成</b></font><br>
+              <font color="#666" size="2"><i>2023年10月1日</i></font><br>
+              今天成功创建了这个兼容FrontPage的网站，包含首页、留言板、图片展示区和更新公告栏。
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- 访客记录 -->
+      <div id="visitors" style="display:none;">
+        <font size="5" color="#336699"><b>访客记录</b></font><br><br>
+        这里记录了网站的访问情况和访客行为。<br><br>
+        
+        <table width="100%" border="0" cellpadding="15" cellspacing="0" bgcolor="#F9F9F9" style="border:1px solid #DDD;">
+          <tr>
+            <td align="center">
+              <b>访问统计</b><br>
+              总访客数：<span id="total-visitors">0</span> | 记录数量：<span id="record-count">0</span>
+            </td>
+          </tr>
+        </table>
+        
+        <br>
+        
+        <center>
+          <input type="button" value="刷新记录" onclick="loadVisitorRecords()" style="background-color:#336699; color:white; border:none; padding:6px 12px; cursor:pointer; margin:0 5px;">
+          <input type="button" value="清空记录" onclick="clearVisitorRecords()" style="background-color:#336699; color:white; border:none; padding:6px 12px; cursor:pointer; margin:0 5px;">
+          <input type="button" value="添加示例" onclick="addSampleRecords()" style="background-color:#336699; color:white; border:none; padding:6px 12px; cursor:pointer; margin:0 5px;">
+        </center>
+        
+        <br>
+        
+        <div id="visitor-list">
+          <table width="100%" border="0" cellpadding="5" cellspacing="0">
+            <tr>
+              <td align="center" style="color:#666; font-style:italic; padding:20px;">
+                点击"添加示例"按钮查看访客记录
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      
+    </td>
+  </tr>
+  <tr>
+    <td bgcolor="#336699" height="40" align="center">
+      <font color="#FFFFFF" size="2">版权所有 &copy; 2023 我的网站 | 单文件完整版 | 设计兼容 Microsoft FrontPage</font>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
